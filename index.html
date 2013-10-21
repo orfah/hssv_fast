@@ -1,0 +1,31 @@
+<html ng-app='Hssv'>
+  <head>
+    <title>HSSV Fast Listing</title>
+    <style>
+      .animals .animal {
+        display: inline-block;
+        border: 1px solid #aaa;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .animals .animal img {
+        height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div ng-controller="mainController">
+      <div ng-repeat="species in species" ng-click="changeSpecies(species)">{{species}}</div>
+      <div class="animals">
+        <div class="animal" ng-repeat="animal in animals">
+          <a href="https://adopt.hssvmil.org/animal/animalDetails.asp?statusid=3&animalid={{animal}}">
+            <img src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal}}/{{animal}}.jpg">
+          </a>
+        </div>
+        <!--<div ng-controller="animalController"></div>-->
+      </div>
+    </div>
+  </body>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.js"></script>
+  <script src="js/hssv.js"></script>
+</html>
