@@ -26,8 +26,8 @@ module HSSV
     ANIMAL_URL = '/animal/animalDetails.asp?statusid=3&animalid='
     CACHE_BASE_PATH = '/dropbox'
     ANIMAL_SPECIES = {
-      cat: 2,
-      dog: 3,
+      cat: '2,15',
+      dog: '3,16',
       rabbit: 86,
       other: 87
     }
@@ -38,7 +38,6 @@ module HSSV
     end
 
     def self.run(species_list=[], options={})
-
       Dir.mkdir CACHE_BASE_PATH unless File.exists? CACHE_BASE_PATH
       runner = self.new
       species_list = ANIMAL_SPECIES.values() if species_list.empty?
@@ -186,12 +185,13 @@ module HSSV
 
     def fetch_animals(animals, options={})
       hydra = Typhoeus::Hydra.new
-      animals.each do |animal_id|
+      animals.each do |animal_data|
+        animal_id = animal_data[:animal_id]
         if not File.exists? animal_cache_path(animal_id) or options[:force]
           puts "fetching animal page #{animal_url animal_id}" if verbose
           req = Typhoeus::Request.new animal_url(animal_id)
           req.on_complete do |res| 
-            process_animal_page res.body, animal_id
+            process_animal_page res.body, animal_data
           end
           hydra.queue req
         end
@@ -200,7 +200,8 @@ module HSSV
       hydra.run
     end
 
-    def process_animal_page(page_str, animal_id, options={})
+    def process_animal_page(page_str, animal_data, options={})
+      animal_id = animal_data[:animal_id]
       path = animal_cache_path(animal_id)
       Dir.mkdir path unless File.exists? path
 
@@ -223,8 +224,36 @@ module HSSV
     def process_search_page(page_str, page_details, options={})
       html = Nokogiri::HTML page_str
       animals = html
-        .css('.search-results-table .searchResultsCell a.search-result-animal-name')
-        .collect { |animal_link| Helpers.animal_id(animal_link['href']) }
+        .css('.search-results-table .searchResultsCell .pic-wrap')
+        .collect {|animal_node| animal_data animal_node }
+    end
+
+    def animal_data(animal_node)
+      metadata = animal_node.css('.hovertext')
+        .children
+        .reject  { |n| n.name == 'br' }
+        .collect { |n| n.text.strip }
+
+      (name, age, breed) = metadata
+
+      # do a little dance around wonky data
+      if breed.to_s.empty?
+        breed = age
+        age = ''
+      end
+      unless age.empty?
+        age = age.split[0].sub('Mths', ' month').sub('Yrs', ' year')
+        age += 's' if age.match(/(\d+)/)[1].to_i > 1
+      end
+
+      link = animal_node.css('a').first()['href']
+      animal_id = Helpers.animal_id(link)
+      {
+        age: age,
+        name: name,
+        breed: breed,
+        animal_id: animal_id
+      }
     end
   end
 end

@@ -12,8 +12,10 @@ hssv.factory('species', function($http) {
     , selectedSpecies = 'dog'
 
   factory.mapping = {
-      cat: 2
-    , dog: 3
+      // kittens are 15
+      cat: '2,15'
+      // puppies are 16
+    , dog: '3,16'
     , rabbit: 86
     , other: 87
   }
@@ -40,6 +42,10 @@ hssv.factory('species', function($http) {
     return factory
   }
 
+  factory.selected = function() {
+    return selectedSpecies
+  }
+
   return factory
 } )
 
@@ -51,6 +57,9 @@ hssv.controller('mainController', function($scope, species) {
     species.setSpecies(speciesName)
       .fetch()
       .then($scope.success)
+  }
+  $scope.selected = function(speciesName) {
+    return species.selected() === speciesName
   }
 
   $scope.success = function(response) {

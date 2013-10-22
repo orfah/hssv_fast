@@ -1,28 +1,81 @@
+<!DOCTYPE html>
 <html ng-app='Hssv'>
   <head>
     <title>HSSV Fast Listing</title>
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
     <style>
+      .main {
+        text-align: center;
+      }
+      .animals {
+        width: 970px;
+        margin: 0 auto;
+      }
       .animals .animal {
         display: inline-block;
         border: 1px solid #aaa;
         padding: 10px;
         border-radius: 5px;
+        overflow:hidden;
+        position: relative;
+        margin: 10px;
       }
       .animals .animal img {
         height: 200px;
+        border-radius: 5px;
+      }
+      .animal .wrapper {
+        width: 200px;
+        height: 200px;
+        overflow: hidden;
+        text-align: center;
+        position: relative;
+      }
+      .details {
+        position: absolute;
+        opacity: 0;
+        -webkit-transition: all 0.3s;
+        bottom: 0px;
+        background: #fff;
+        width: 100%;
+        padding: 2px 5px;
+      }
+      .animal:hover .details {
+        opacity: 0.9;
+      }
+      .btn-group {
+        margin: 10px 0;
+      }
+      .btn-group .btn {
+        color: #aaa;
+        text-shadow: 0 1px 0 rgba(220, 220, 220, 0.8);
+      }
+      .btn-group .selected {
+        background: #5790e5;
+        color: #f4f4f4;
+        text-shadow: 0 1px 0 rgba(30, 30, 30, 0.4);
       }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
-    <div ng-controller="mainController">
-      <div ng-repeat="species in species" ng-click="changeSpecies(species)">{{species}}</div>
+    <div class="main" ng-controller="mainController">
+      <div class="btn-group">
+        <button type="button" class="btn btn-default" ng-class="{selected: selected(speciesName)}" ng-repeat="speciesName in species" ng-click="changeSpecies(speciesName)">
+          {{speciesName}}
+        </button>
+      </div>
       <div class="animals">
         <div class="animal" ng-repeat="animal in animals">
-          <a href="https://adopt.hssvmil.org/animal/animalDetails.asp?statusid=3&animalid={{animal}}">
-            <img src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal}}/{{animal}}.jpg">
-          </a>
+          <div class="wrapper">
+            <a href="https://adopt.hssvmil.org/animal/animalDetails.asp?statusid=3&animalid={{animal.animal_id}}">
+              <img src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal.animal_id}}/{{animal.animal_id}}.jpg">
+              <div class="details">
+                <span class="breed">{{animal.breed}}</span> / <span class="age">{{animal.age}}</span>
+              </div>
+            </a>
+          </div>
         </div>
-        <!--<div ng-controller="animalController"></div>-->
       </div>
     </div>
   </body>
