@@ -36,6 +36,10 @@ hssv.factory('species', function($http) {
     )
   }
 
+  factory.fetchAnimalImages = function(animalId) {
+    return $http.get(animalImagesUrl(animalId))
+  }
+
   factory.setSpecies = function(speciesName) {
     selectedSpecies = speciesName
     // chainable
@@ -52,6 +56,7 @@ hssv.factory('species', function($http) {
 hssv.controller('mainController', function($scope, species) {
   $scope.species = species.names()
   $scope.animals = []
+  $scope.photos = []
 
   $scope.changeSpecies = function(speciesName) {
     species.setSpecies(speciesName)
@@ -64,6 +69,34 @@ hssv.controller('mainController', function($scope, species) {
 
   $scope.success = function(response) {
     $scope.animals = response.data
+  }
+
+  $scope.photosSuccess = function(response) {
+    photos = response.data
+    for (i in photos) {
+      photo = photos[i].split('/')
+      $scope.photos.push(photo[photo.length - 1])
+    }
+  }
+
+  $scope.selectedAnimal = false
+  $scope.selectedPhoto = false
+
+  $scope.deselectAnimal = function() {
+    $scope.photos = []
+    $scope.selectedAnimal = false
+    $scope.selectedPhoto = false
+  }
+
+  $scope.selectAnimal = function(animal) {
+    $scope.selectedAnimal = animal
+    $scope.selectedPhoto = $scope.selectedAnimal.animal_id + '.jpg'
+    species.fetchAnimalImages(animal.animal_id)
+      .then($scope.photosSuccess)
+  }
+
+  $scope.selectPhoto = function(photo) {
+    $scope.selectedPhoto = photo
   }
 
   species.fetch().then($scope.success)

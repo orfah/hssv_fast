@@ -7,9 +7,16 @@
       .main {
         text-align: center;
       }
+      .main-wrapper {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 0; right: 0;
+        overflow: scroll;
+      }
       .animals {
         width: 970px;
         margin: 0 auto;
+        /*padding-top: 60px;*/
       }
       .animals .animal {
         display: inline-block;
@@ -19,6 +26,7 @@
         overflow:hidden;
         position: relative;
         margin: 10px;
+        cursor: pointer;
       }
       .animals .animal img {
         height: 200px;
@@ -43,6 +51,15 @@
       .animal:hover .details {
         opacity: 0.9;
       }
+      /*
+      .btn-wrapper {
+        position: fixed;
+        z-index: 3;
+        background: #fff;
+        width: 100%;
+        border-bottom: 1px solid #e8e8e8;
+      }
+      */
       .btn-group {
         margin: 10px 0;
       }
@@ -55,29 +72,119 @@
         color: #f4f4f4;
         text-shadow: 0 1px 0 rgba(30, 30, 30, 0.4);
       }
+      .modal {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 0; right: 0;
+        display: none;
+      }
+      .modal.active {
+        display: block;
+      }
+      .modal .background {
+        position: absolute;
+        top: 0; bottom: 0;
+        left: 0; right: 0;        
+        opacity: 0;
+        z-index: -1;
+        -webkit-transition: opacity 0.3s; 
+        background: #000;
+        display: block;
+      }
+      .modal.active .background {
+        opacity: 0.5;
+        z-index: 10;
+      }
+      .modal .lightbox-photos {
+        z-index: 15;
+        max-width: 900px;
+        height: 630px;
+        margin: 0 auto;
+        position: relative;
+        padding: 15px;
+        padding-right: 200px;
+        background: rgba(30, 30, 30, 0.8);
+        clear: both;
+        border: 1px solid #444;
+        border-radius: 5px;
+      }
+      .modal .photos {
+        width: 200px;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        position: absolute;
+        overflow: scroll;
+        background: rgba(70, 70, 70, 0.8);
+        padding: 0 5px;
+      }
+      .modal .photos img {
+        width: 190px;
+        cursor: pointer;
+        margin: 10px 0;
+        border-radius: 5px;
+        border: 1px solid #444;
+      }
+
+      .lightbox-photos .photos {
+        border-left: 1px solid #777;
+        width: 210px;
+      }
+      .main-photo {
+        text-align: center;
+      }
+      .main-photo img {
+        max-width: 700px;
+        max-height: 700px;
+      }
+      .floater {
+        float: left;
+        height: 50%;
+        width: 100%;
+        margin-bottom: -315px;
+      }
     </style>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body>
     <div class="main" ng-controller="mainController">
-      <div class="btn-group">
-        <button type="button" class="btn btn-default" ng-class="{selected: selected(speciesName)}" ng-repeat="speciesName in species" ng-click="changeSpecies(speciesName)">
-          {{speciesName}}
-        </button>
-      </div>
-      <div class="animals">
-        <div class="animal" ng-repeat="animal in animals">
-          <div class="wrapper">
-            <a href="https://adopt.hssvmil.org/animal/animalDetails.asp?statusid=3&animalid={{animal.animal_id}}">
-              <img src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal.animal_id}}/{{animal.animal_id}}.jpg">
+      <div class="main-wrapper">
+        <div class="btn-wrapper">
+          <div class="btn-group">
+            <button type="button" class="btn btn-default" ng-class="{selected: selected(speciesName)}" ng-repeat="speciesName in species" ng-click="changeSpecies(speciesName)">
+              {{speciesName}}
+            </button>
+          </div>
+        </div>
+        <div class="animals">
+          <div class="animal" ng-repeat="animal in animals">
+            <div class="wrapper">
+              <img  ng-click="selectAnimal(animal)" 
+                    src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal.animal_id}}/{{animal.animal_id}}.jpg">
               <div class="details">
                 <span class="breed">{{animal.breed}}</span> / <span class="age">{{animal.age}}</span>
               </div>
-            </a>
+            </div>
           </div>
         </div>
       </div>
+      <div class="modal" ng-class="{active: selectedAnimal}">
+        <div class="floater"></div>
+        <div class="lightbox-photos" ng-class="{active: selectedAnimal}">
+          <button type="button" class="close" aria-hidden="true">&times;</button>
+          <div class="photos">
+            <img ng-repeat="photo in photos" src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{selectedAnimal.animal_id}}/{{photo}}" ng-click="selectPhoto(photo)">
+          </div>
+          <div class="main-photo">
+            <a href="https://adopt.hssvmil.org/animal/animalDetails.asp?statusID=3&animalid={{selectedAnimal.animal_id}}">
+              <img src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{selectedAnimal.animal_id}}/{{selectedPhoto}}">
+            </a>
+          </div>
+        </div>
+        <div class="background" ng-click="deselectAnimal()"></div>
+      </div>
     </div>
+   </div>
   </body>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.js"></script>
   <script src="js/hssv.js"></script>
