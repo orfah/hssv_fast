@@ -9,7 +9,7 @@ hssv.factory('species', function($http) {
     , animalImagesUrl = function(animalId) {
         return urlBase + 'animal_' + animalId + '/images.json'
       }
-    , selectedSpecies = 'dog'
+    , selectedSpecies = 'other'
 
   factory.mapping = {
       // kittens are 15
@@ -53,10 +53,20 @@ hssv.factory('species', function($http) {
   return factory
 } )
 
-hssv.controller('mainController', function($scope, species) {
+hssv.controller('mainController', function($scope, $timeout, species) {
+  _photos = []
+
   $scope.species = species.names()
   $scope.animals = []
   $scope.photos = []
+
+  $scope.sortCriteria = 'breed'
+  $scope.sortCriteriaList = ['breed', 'age']
+
+  $scope.changeSort = function(sortBy) {
+    $scope.sortCriteria = sortBy
+    $scope.loadImages()
+  }
 
   $scope.changeSpecies = function(speciesName) {
     species.setSpecies(speciesName)
@@ -69,14 +79,11 @@ hssv.controller('mainController', function($scope, species) {
 
   $scope.success = function(response) {
     $scope.animals = response.data
+    $timeout(function() { console.log ('timeout happened'); $scope.loadImages() }, 200);
   }
 
   $scope.photosSuccess = function(response) {
-    photos = response.data
-    for (i in photos) {
-      photo = photos[i].split('/')
-      $scope.photos.push(photo[photo.length - 1])
-    }
+    $scope.photos = response.data
   }
 
   $scope.selectedAnimal = false
@@ -99,5 +106,30 @@ hssv.controller('mainController', function($scope, species) {
     $scope.selectedPhoto = photo
   }
 
+  $scope.loadImages = function() {
+    var images = document.querySelectorAll('.wrapper img')
+      , i = 0
+      , l = images.length
+      , bounds
+      , image
+      , containerHeight = document.querySelector('.main-wrapper').getBoundingClientRect().height
+
+    for (i = 0; i < l; i++) {
+      image = images[i]
+      bounds = image.getBoundingClientRect()
+      if (bounds.top < containerHeight + 500 && image.src === '')
+        image.src = image.attributes.loadsrc.value
+    }
+  }
+
   species.fetch().then($scope.success)
+})
+
+hssv.directive('whenScrolled', function() {
+  return function(scope, elt, attrs) {
+    var scrollContainer = elt[0]
+    elt.bind('scroll', function() {
+      scope.$apply(attrs.whenScrolled)
+    })
+  }
 })

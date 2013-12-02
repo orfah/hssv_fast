@@ -148,7 +148,7 @@
   </head>
   <body>
     <div class="main" ng-controller="mainController">
-      <div class="main-wrapper">
+      <div class="main-wrapper" when-scrolled="loadImages()">
         <div class="btn-wrapper">
           <div class="btn-group">
             <button type="button" class="btn btn-default" ng-class="{selected: selected(speciesName)}" ng-repeat="speciesName in species" ng-click="changeSpecies(speciesName)">
@@ -157,10 +157,17 @@
           </div>
         </div>
         <div class="animals">
-          <div class="animal" ng-repeat="animal in animals">
+          <div class="btn-wrapper">
+            <div class="btn-group">
+              <button type="button" class="btn btn-default" ng-class="{selected: (sortCriteria == criteria)}" ng-repeat="criteria in sortCriteriaList" ng-click="changeSort(criteria)">
+                {{criteria}}
+              </button>
+            </div>
+          </div>
+          <div class="animal" ng-repeat="animal in animals | orderBy:sortCriteria">
             <div class="wrapper">
-              <img  ng-click="selectAnimal(animal)" 
-                    src="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal.animal_id}}/{{animal.animal_id}}.jpg">
+              <img ng-click="selectAnimal(animal)" 
+                loadsrc="https://dl.dropboxusercontent.com/u/227528123/hssv/animal_{{animal.animal_id}}/{{animal.animal_id}}.jpg">
               <div class="details">
                 <span class="breed">{{animal.breed}}</span> / <span class="age">{{animal.age}}</span>
               </div>
