@@ -22,7 +22,7 @@ module HSSV
 
   class Spider
     URL_BASE = 'https://adopt.hssvmil.org'
-    SEARCH_URL = '/search/searchResults.asp?animalType='
+    SEARCH_URL = '/search/searchResults.asp?searchType=4&animalType='
     ANIMAL_URL = '/animal/animalDetails.asp?statusid=3&animalid='
     CACHE_BASE_PATH = '/dropbox'
     ANIMAL_SPECIES = {
@@ -138,17 +138,19 @@ module HSSV
     # allows you to call "get_dogs", "get_cats", "get_rabbits" and "get_others"
     ###
     def fetch_species(species, options={})
+      puts "fetching species #{species}"
       @animals[species] ||= []
       url = search_url + species.to_s
+      puts url
       response = Typhoeus::get(url)
       animals = []
 
       if response.success?
         html = Nokogiri::HTML response.body
         page_links = html.css('a.SearchResultsPageLink')
-        # good job hssv, you put the current page in the links with no identifiers
-        # slightly inefficient, fetches first page twice
-        page_links = [{url: url}] if page_links.nil?
+        page_links = page_links.collect { |p| p['href'] }
+        page_links << url
+        page_links.each {|p| puts p }
 
         fetch_search_pages species, page_links
         fetch_animals @animals[species]
@@ -164,7 +166,8 @@ module HSSV
       hydra = Typhoeus::Hydra.new
 
       page_links.each_with_index do |link, i|
-        page_link = URL_BASE + link['href']
+        page_link = link
+        page_link = URL_BASE + link unless page_link.start_with? 'http'
         unless processed_pages[page_link]
           puts "fetching species page #{i}: #{page_link}"# if verbose
 
@@ -188,8 +191,8 @@ module HSSV
       animals.each do |animal_data|
         animal_id = animal_data[:animal_id]
         if not File.exists? animal_cache_path(animal_id) or options[:force]
-          puts "fetching animal page #{animal_url animal_id}" if verbose
-          req = Typhoeus::Request.new animal_url(animal_id)
+          puts "fetching animal page #{animal_url animal_id}" #if verbose
+          req = Typhoeus::Request.new(animal_url(animal_id), followlocation: true)
           req.on_complete do |res| 
             process_animal_page res.body, animal_data
           end
@@ -203,18 +206,21 @@ module HSSV
     def process_animal_page(page_str, animal_data, options={})
       animal_id = animal_data[:animal_id]
       path = animal_cache_path(animal_id)
+      puts "making path #{path}"
       Dir.mkdir path unless File.exists? path
 
       hydra = Typhoeus::Hydra.new
       html = Nokogiri::HTML page_str
       images = html.css('.fancyBoxGroup').collect {|i| i['href']}
 
-      images.each do |img|
-        img_path = img_cache_path animal_id, Helpers.image_name(img)
+      images.collect! do |img|
+        img_name = Helpers.image_name(img)
+        img_path = img_cache_path animal_id, img_name
         puts "fetching image #{img} #{img_path}" if verbose
         req = Typhoeus::Request.new image_url(img)
         req.on_complete {|res| cache_img res.body, img_path }
         hydra.queue req
+        img_name
       end
       hydra.run
 
@@ -225,7 +231,7 @@ module HSSV
       html = Nokogiri::HTML page_str
       animals = html
         .css('.search-results-table .searchResultsCell .pic-wrap')
-        .collect {|animal_node| animal_data animal_node }
+        .collect {|animal_node| animal_data animal_node }.compact
     end
 
     def animal_data(animal_node)
@@ -246,14 +252,17 @@ module HSSV
         age += 's' if age.match(/(\d+)/)[1].to_i > 1
       end
 
-      link = animal_node.css('a').first()['href']
-      animal_id = Helpers.animal_id(link)
-      {
-        age: age,
-        name: name,
-        breed: breed,
-        animal_id: animal_id
-      }
+      link = animal_node.css('a').first()
+      unless link.nil?
+        link = link['href']
+        animal_id = Helpers.animal_id(link)
+        {
+          age: age,
+          name: name,
+          breed: breed,
+          animal_id: animal_id
+        }
+      end
     end
   end
 end
