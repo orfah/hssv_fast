@@ -121,7 +121,6 @@ hssv.controller('mainController', function($scope, $timeout, species) {
         image.src = image.attributes.loadsrc.value
     }
   }
-
   species.fetch().then($scope.success)
 })
 

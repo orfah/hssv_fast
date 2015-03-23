@@ -41,7 +41,7 @@ module HSSV
       Dir.mkdir CACHE_BASE_PATH unless File.exists? CACHE_BASE_PATH
       runner = self.new
       species_list = ANIMAL_SPECIES.values() if species_list.empty?
-      species_list.each {|species| runner.fetch_species species }
+      species_list.each {|species| runner.fetch_species(species, options) }
     end
 
     def verbose(value=nil)
@@ -267,4 +267,7 @@ module HSSV
   end
 end
 
-HSSV::Spider.run()
+species = ARGV[0].nil? ? [] : JSON.parse(ARGV[0])
+options = ARGV[1].nil? ? {} : JSON.parse(ARGV[1])
+
+HSSV::Spider.run(species, options)
